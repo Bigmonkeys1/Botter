@@ -100,3 +100,12 @@ async def bot(req: BotRequest):
     return results
     
 from fastapi.responses import FileResponse
+
+@app.get("/")
+async def home():
+    return FileResponse("index.html")
+
+
+@app.get("/ping")
+async def ping():
+    return {"status": "alive"}
