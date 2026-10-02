@@ -87,6 +87,15 @@ async def bot(req: BotRequest):
             results["used_proxies"].append(raw)
             await asyncio.sleep(random.uniform(1.5, 4.0))
 
+    from fastapi.responses import HTMLResponse
+
+   @app.get("/", response_class=HTMLResponse)
+async def home():
+    return """
+    <h1>View Botter</h1>
+    <p>Server is running.</p>
+    """
+
     pairs = list(zip(proxy_lines, formatted))[:req.views]
     if not pairs:
         for _ in range(req.views):
