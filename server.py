@@ -1,9 +1,8 @@
 # language: Python 3.11, file: server.py, target: Render.com Docker
 import asyncio
 import random
-from pydantic import BaseModel
 
-from pydantic 
+from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
