@@ -99,24 +99,4 @@ async def bot(req: BotRequest):
 
     return results
     
-@app.get("/", response_class=HTMLResponse)
-async def home():
-    with open("index.html", "r", encoding="utf-8") as f:
-        return f.read()
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>View Botter</title>
-    </head>
-    <body style="background:#0d0d0d;color:white;font-family:sans-serif;padding:30px">
-        <h1>🔥 View Botter</h1>
-        <p>Server is online.</p>
-    </body>
-    </html>
-    """
-
-
-@app.get("/ping")
-async def ping():
-    return {"status": "alive"}
+from fastapi.responses import FileResponse
