@@ -69,7 +69,7 @@ input[type=range]{flex:1;accent-color:#ff3b30}
 
 <script>
 const SERVER = "https://botter-1.onrender.com";
-const KEY = "Aaa";
+const KEY = "vb_place";
 
 function getUsed(){try{return new Set(JSON.parse(localStorage.getItem(KEY)||"[]"))}catch{return new Set()}}
 function saveUsed(s){try{localStorage.setItem(KEY,JSON.stringify([...s]))}catch{}}
