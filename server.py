@@ -101,7 +101,8 @@ async def bot(req: BotRequest):
     
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    return """
+    with open("index.html", "r", encoding="utf-8") as f:
+        return f.read()
     <!DOCTYPE html>
     <html>
     <head>
