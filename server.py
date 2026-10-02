@@ -115,6 +115,7 @@ async def home():
     </html>
     """
 
+
 @app.get("/ping")
 async def ping():
     return {"status": "alive"}
