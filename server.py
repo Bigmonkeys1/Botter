@@ -1,8 +1,10 @@
 # language: Python 3.11, file: server.py, target: Render.com Docker
-import asyncio, random
+import asyncio
+import random
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -107,6 +109,11 @@ async def bot(req: BotRequest):
 
     print(f"done: {results}")
     return results
+
+@app.get("/")
+async def home():
+    return FileResponse("index.html")
+
 
 @app.get("/ping")
 async def ping():
