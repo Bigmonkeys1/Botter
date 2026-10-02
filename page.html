@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>View Botter</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#0d0d0d;color:#f0f0f0;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  min-height:100dvh;
+  padding:env(safe-area-inset-top,24px) 18px env(safe-area-inset-bottom,30px);
+  display:flex;flex-direction:column;gap:12px;
+}
+h1{font-size:20px;font-weight:700;letter-spacing:-.3px;padding-top:6px}
+.card{background:#1c1c1e;border:0.5px solid #2c2c2e;border-radius:12px;padding:13px}
+label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:block}
+input,textarea{width:100%;background:transparent;border:none;color:#f0f0f0;font-size:16px;outline:none;font-family:inherit}
+textarea{resize:none;height:115px;font-size:13px;line-height:1.6}
+.vrow{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:#ff3b30}
+.vnum{font-size:26px;font-weight:700;color:#ff3b30;min-width:48px;text-align:right}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meta{font-size:12px;color:#444;margin-top:7px}
+.meta b{color:#0a84ff;font-weight:500}
+.send{width:100%;background:#ff3b30;color:#fff;border:none;border-radius:12px;padding:15px;font-size:17px;font-weight:600;cursor:pointer}
+.send:active{opacity:.75}
+.send:disabled{background:#222;color:#444}
+.ghost{width:100%;background:transparent;color:#555;border:0.5px solid #2c2c2e;border-radius:12px;padding:12px;font-size:14px;cursor:pointer}
+.log{background:#1c1c1e;border:0.5px solid #2c2c2e;border-radius:12px;padding:13px;font-size:13px;line-height:1.7;display:none;color:#666}
+.log.ok{color:#30d158;border-color:#1c3a24}
+.log.err{color:#ff453a;border-color:#3a1c1c}
+.log.run{color:#0a84ff;border-color:#0a2040}
+</style>
+</head>
+<body>
+
+<h1>🔥 View Botter</h1>
+
+<div class="card">
+  <label>TikTok URL</label>
+  <input id="url" type="url" placeholder="https://www.tiktok.com/@user/video/…">
+</div>
+
+<div class="card">
+  <label>Views to send</label>
+  <div class="vrow">
+    <input type="range" id="slider" min="1" max="1000" value="50" step="1"
+      oninput="document.getElementById('vn').textContent=this.value">
+    <div class="vnum" id="vn">50</div>
+  </div>
+</div>
+
+<div class="card">
+  <label>Proxies — IP:Port:User:Pass</label>
+  <textarea id="proxies" placeholder="1.2.3.4:8080:user:pass&#10;5.6.7.8:3128:user:pass"></textarea>
+  <div class="meta">loaded: <b id="pc">0</b> &nbsp;·&nbsp; used: <b id="uc">0</b> &nbsp;·&nbsp; remaining: <b id="rc">0</b></div>
+</div>
+
+<div class="g2">
+  <div class="card"><label>Watch (sec)</label><input id="watch" type="number" value="10" min="3" max="60"></div>
+  <div class="card"><label>Concurrency</label><input id="conc" type="number" value="3" min="1" max="10"></div>
+</div>
+
+<button class="send" id="btn" onclick="run()">Send Views</button>
+<button class="ghost" onclick="clearUsed()">Clear used proxies</button>
+<div class="log" id="log"></div>
+
+<script>
+const SERVER = "https://botter-1.onrender.com";
+const KEY = "vb_place";
+
+function getUsed(){try{return new Set(JSON.parse(localStorage.getItem(KEY)||"[]"))}catch{return new Set()}}
+function saveUsed(s){try{localStorage.setItem(KEY,JSON.stringify([...s]))}catch{} }
+
+function parseProxies(){
+  return document.getElementById("proxies").value
+    .split("\n").map(l=>l.trim()).filter(l=>l.split(":").length===4);
+}
+
+function updateMeta(){
+  const all=parseProxies(), used=getUsed();
+  document.getElementById("pc").textContent=all.length;
+  document.getElementById("uc").textContent=used.size;
+  document.getElementById("rc").textContent=all.filter(p=>!used.has(p)).length;
+}
+
+document.getElementById("proxies").addEventListener("input",updateMeta);
+
+function setLog(msg,type){
+  const el=document.getElementById("log");
+  el.style.display="block";
+  el.className="log "+type;
+  el.textContent=msg;
+}
+
+function clearUsed(){
+  try{localStorage.removeItem(KEY)}catch{}
+  updateMeta();
+  setLog("Used proxy list cleared.","ok");
+}
+
+async function run(){
+  const url=document.getElementById("url").value.trim();
+  const views=parseInt(document.getElementById("slider").value);
+  const watch=parseFloat(document.getElementById("watch").value);
+  const conc=parseInt(document.getElementById("conc").value);
+
+  if(!url){setLog("Paste a TikTok URL first.","err");return;}
+
+  const all=parseProxies();
+  const used=getUsed();
+  const available=all.filter(p=>!used.has(p));
+
+  if(all.length>0&&available.length===0){
+    setLog("All proxies used — clear the list or add new ones.","err");return;
+  }
+
+  const toSend=available.slice(0,views);
+  const btn=document.getElementById("btn");
+  btn.disabled=true; btn.textContent="Running…";
+  setLog(`Sending ${Math.min(views, toSend.length||views)} views…`,"run");
+
+  try{
+    const res=await fetch(`${SERVER}/bot`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({url,views,watch_seconds:watch,concurrency:conc,proxies:toSend})
+    });
+    const data=await res.json();
+    const nowUsed=getUsed();
+    (data.used_proxies||[]).forEach(p=>nowUsed.add(p));
+    saveUsed(nowUsed);
+    updateMeta();
+    setLog(`✓ Done — ${data.success} views sent, ${data.fail} failed. ${data.used_proxies?.length||0} proxies consumed.`,"ok");
+  }catch(e){
+    setLog(`✗ Server error — ${e.message}. If first request, wait 60s for cold start then retry.`,"err");
+  }finally{
+    btn.disabled=false; btn.textContent="Send Views";
+  }
+}
+
+updateMeta();
+</script>
+</body>
+</html>
